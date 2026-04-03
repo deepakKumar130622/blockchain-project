@@ -1,0 +1,83 @@
+/* General Styles for Landing Page */
+.landingP {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background-color: #121212;
+  color: #ffffff;
+  font-family: "Times New Roman", serif;
+}
+
+/* Button Container */
+.button-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Custom Buttons */
+.custom-button {
+  padding: 15px 30px;
+  border: none;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: bold;
+  color: #ffffff;
+  background-color: #00adb5;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.custom-button:hover {
+  background-color: #393e46;
+  transform: scale(1.05);
+}
+
+.custom-button:active {
+  transform: scale(0.95);
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .landingP {
+    background-color: #1e1e1e;
+    color: #ffffff;
+  }
+
+  .custom-button {
+    background-color: #00adb5;
+  }
+
+  .custom-button:hover {
+    background-color: #393e46;
+  }
+}
+
+/* Link Hover Animation */
+.link {
+  position: relative; /* Needed for ::before positioning */
+  text-decoration: none;
+  color: #ffffff;
+  font-size: 18px;
+  padding: 0.5rem;
+  display: inline-block; /* Ensures width behaves properly */
+  transition: color 0.3s ease;
+}
+
+.link::before {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  width: 0;
+  background-color: #ffffff;
+  border-radius: 5px;
+  transition: width 0.4s ease;
+}
+
+.link:hover::before {
+  width: 100%;
+}

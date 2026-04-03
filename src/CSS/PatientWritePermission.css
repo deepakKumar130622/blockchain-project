@@ -1,0 +1,112 @@
+/* Main container */
+.patientwritepermission {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  min-height: 100vh;
+  background: linear-gradient(to bottom right, #1f1c2c, #928dab);
+  color: #ffffff;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Heading */
+.patientwritepermission h1 {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 24px;
+  color: #00ffd5;
+  text-shadow: 0 0 6px rgba(0, 255, 213, 0.5);
+}
+
+/* Glassmorphic Form Wrapper */
+.permission-form {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 30px 25px;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+  transition: transform 0.3s ease;
+}
+
+.permission-form:hover {
+  transform: translateY(-3px);
+}
+
+/* Label styling */
+.patientwritepermission label {
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 8px;
+  display: block;
+  color: #dddddd;
+}
+
+/* Input styling */
+.patientwritepermission input {
+  width: 100%;
+  padding: 12px 14px;
+  border: none;
+  border-radius: 10px;
+  margin-bottom: 18px;
+  background-color: rgba(255, 255, 255, 0.07);
+  color: #ffffff;
+  font-size: 1rem;
+  transition: background-color 0.3s ease;
+}
+
+.patientwritepermission input:focus {
+  outline: none;
+  background-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 0 2px #00adb5;
+}
+
+/* Buttons */
+.patientwritepermission button {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: bold;
+  color: #ffffff;
+  background: linear-gradient(to right, #00adb5, #007e85);
+  cursor: pointer;
+  margin: 8px 10px 0 0;
+  transition: all 0.3s ease;
+}
+
+.patientwritepermission button:hover {
+  background: linear-gradient(to right, #00cfc9, #005e65);
+  transform: scale(1.05);
+}
+
+.patientwritepermission button:active {
+  transform: scale(0.95);
+}
+
+/* Permission Status Text */
+.patientwritepermission p {
+  font-size: 1.1rem;
+  margin-top: 20px;
+  text-align: center;
+  color: #00ffd5;
+}
+
+/* Responsive Design */
+@media screen and (max-width: 480px) {
+  .patientwritepermission {
+    padding: 20px 10px;
+  }
+
+  .permission-form {
+    padding: 20px;
+  }
+
+  .patientwritepermission h1 {
+    font-size: 1.5rem;
+  }
+}

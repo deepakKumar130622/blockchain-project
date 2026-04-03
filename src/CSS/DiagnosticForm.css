@@ -1,0 +1,115 @@
+/* General Styles */
+body {
+  font-family: "Arial", sans-serif;
+  background-color: #111827;
+  color: white;
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  padding: 20px;
+}
+
+/* Form Card */
+.form-card {
+  background-color: #1f2937;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  max-width: 500px;
+  width: 100%;
+  text-align: center;
+}
+
+/* Heading */
+.form-card h2 {
+  font-size: 22px;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+/* Input Fields */
+.form-card input,
+.form-card select {
+  width: 100%;
+  padding: 10px;
+  margin-top: 8px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  border: none;
+  background-color: #374151;
+  color: white;
+  outline: none;
+}
+
+.form-card input::placeholder {
+  color: #a1a1aa;
+}
+
+/* File Upload */
+.file-upload {
+  margin: 10px 0;
+}
+
+.file-upload input {
+  color: white;
+}
+
+/* Buttons */
+.button-group {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 15px;
+}
+
+.button {
+  flex: 1;
+  padding: 10px;
+  margin: 0 5px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.upload-btn {
+  background-color: #2563eb;
+  color: white;
+}
+
+.upload-btn:hover {
+  background-color: #1d4ed8;
+}
+
+.cancel-btn {
+  background-color: #6b7280;
+  color: white;
+}
+
+.cancel-btn:hover {
+  background-color: #4b5563;
+}
+
+/* Responsive Design */
+@media (max-width: 500px) {
+  .form-card {
+    padding: 15px;
+  }
+
+  .button-group {
+    flex-direction: column;
+  }
+
+  .button {
+    margin-bottom: 10px;
+  }
+}
+ 

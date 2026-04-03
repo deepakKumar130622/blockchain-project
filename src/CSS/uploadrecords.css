@@ -1,0 +1,130 @@
+body {
+    margin: 0;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #020710;
+    color: white;
+  }
+  
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: black;
+    padding: 1rem 2rem;
+    border-bottom: 1px solid #333;
+  }
+  
+  .logo {
+    height: 50px;
+  }
+  
+  .header-title {
+    color: white;
+    font-size: 1.5rem;
+    flex-grow: 1;
+    text-align: center;
+  }
+  
+  .logout-btn {
+    background: none;
+    border: 1px solid #fff;
+    padding: 0.4rem 0.8rem;
+    border-radius: 5px;
+    color: white;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: 0.3s;
+  }
+  
+  .logout-btn:hover {
+    background-color: #333;
+  }
+  
+  .upload-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+  
+  .upload-box {
+    background-color: #111827;
+    border: 1px solid #374151;
+    border-radius: 16px;
+    padding: 2rem;
+    width: 100%;
+    max-width: 500px;
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.08);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.2rem;
+  }
+  
+  .upload-title {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #ffffff;
+  }
+  
+  .file-input-container input[type="file"] {
+    background-color: #1f2937;
+    padding: 0.6rem;
+    border-radius: 8px;
+    border: 1px solid #4b5563;
+    color: #fff;
+    width: 100%;
+    max-width: 350px;
+  }
+  
+  .button-group {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  .submit-btn, .cancel-btn {
+    background-color: #00bcd4;
+    color: white;
+    border: none;
+    padding: 0.5rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: 0.2s ease-in-out;
+  }
+  
+  .submit-btn:hover {
+    background-color: #00acc1;
+  }
+  
+  .cancel-btn {
+    background-color: #ff4f58;
+  }
+  
+  .cancel-btn:hover {
+    background-color: #e6454f;
+  }
+  
+  .back-btn {
+    margin-top: 0.5rem;
+    color: #00bcd4;
+    background: none;
+    border: none;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  
+  .error-message {
+    color: #ff6b6b;
+    font-size: 0.9rem;
+  }
+  
+  .success-message {
+    color: #66ff99;
+    font-size: 0.9rem;
+  }
+  

@@ -2,13 +2,31 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Web3 from "web3";
 import NavBar_Logout from "./NavBar_Logout";
+import PatientRegistration from "../build/contracts/PatientRegistration.json";
 
 const GrantPermission = () => {
   const [doctorHHNumber, setDoctorHHNumber] = useState("");
   const [loggedInPatient, setLoggedInPatient] = useState(null);
+  const [authorizedDoctors, setAuthorizedDoctors] = useState([]);
   const [message, setMessage] = useState(null);
   const [currentWallet, setCurrentWallet] = useState(null);
   const navigate = useNavigate();
+
+  const fetchDoctors = async (patient) => {
+    if (!patient) return;
+    try {
+      const web3 = new Web3(window.ethereum);
+      const networkId = await web3.eth.net.getId();
+      const deployedNetwork = PatientRegistration.networks[networkId];
+      if (deployedNetwork) {
+        const contract = new web3.eth.Contract(PatientRegistration.abi, deployedNetwork.address);
+        const doctors = await contract.methods.getDoctorList(patient.id.toString()).call();
+        setAuthorizedDoctors(doctors);
+      }
+    } catch (err) {
+      console.error("Error fetching doctors:", err);
+    }
+  };
 
   useEffect(() => {
     const fetchMetaMaskAccount = async () => {
@@ -23,21 +41,18 @@ const GrantPermission = () => {
         const walletAddress = accounts[0].toLowerCase();
         setCurrentWallet(walletAddress);
 
-        let storedPatients = JSON.parse(localStorage.getItem("patients")) || [];
-        let matchedPatient = storedPatients.find(
-          (patient) => patient.walletAddress?.toLowerCase() === walletAddress
-        );
+        let patient = JSON.parse(localStorage.getItem("loggedInPatient"));
 
-        if (matchedPatient) {
-          localStorage.setItem("loggedInPatient", JSON.stringify(matchedPatient));
-          setLoggedInPatient(matchedPatient);
+        if (patient && patient.walletAddress?.toLowerCase() === walletAddress) {
+          setLoggedInPatient(patient);
           setMessage(null);
+          fetchDoctors(patient);
         } else {
           setMessage({
-            text: "❌ No registered patient found for this MetaMask account.",
+            text: "❌ Mismatch or no logged-in patient found for this MetaMask account.",
             type: "error",
           });
-          localStorage.removeItem("loggedInPatient");
+          setLoggedInPatient(null);
         }
       } catch (error) {
         setMessage({ text: "⚠️ Error fetching MetaMask account.", type: "error" });
@@ -68,63 +83,85 @@ const GrantPermission = () => {
 
       if (patientWallet !== loggedInPatient.walletAddress.toLowerCase()) {
         setMessage({
-          text: "⚠️ MetaMask account mismatch! Auto-fetching correct patient...",
+          text: "⚠️ MetaMask account mismatch! Switch to the correct patient wallet in MetaMask.",
           type: "warning",
         });
-        setTimeout(() => window.location.reload(), 2000);
         return;
       }
 
-      let storedPatients = JSON.parse(localStorage.getItem("patients")) || [];
-      const index = storedPatients.findIndex((p) => p.id === loggedInPatient.id);
-      const patient = storedPatients[index];
-
-      if (!Array.isArray(patient.authorizedDoctors)) {
-        patient.authorizedDoctors = [];
+      const web3 = new Web3(window.ethereum);
+      const networkId = await web3.eth.net.getId();
+      const deployedNetwork = PatientRegistration.networks[networkId];
+      if (!deployedNetwork) {
+        setMessage({ text: "Contract not deployed on current network.", type: "error" });
+        return;
       }
 
-      const alreadyExists = patient.authorizedDoctors.some(
-        (entry) => entry.doctorHH === doctorHHNumber
-      );
+      const contract = new web3.eth.Contract(PatientRegistration.abi, deployedNetwork.address);
 
-      if (!alreadyExists) {
-        patient.authorizedDoctors.push({
-          doctorHH: doctorHHNumber,
-          grantedAt: new Date().toISOString(),
-        });
+      setMessage({ text: "⏳ Granting access on the blockchain... Please confirm the transaction.", type: "warning" });
 
-        storedPatients[index] = patient;
-        localStorage.setItem("patients", JSON.stringify(storedPatients));
-        setLoggedInPatient(patient); // Update local state
-        setDoctorHHNumber("");
-        setMessage({ text: `✅ Access granted to Doctor HH: ${doctorHHNumber}`, type: "success" });
-      } else {
-        setMessage({ text: "⚠️ Doctor already has access.", type: "warning" });
-      }
+      await contract.methods.grantPermission(
+        loggedInPatient.id.toString(),
+        doctorHHNumber,
+        loggedInPatient.name
+      ).send({ from: patientWallet, gas: 3000000 });
+
+      setMessage({ text: `✅ Access granted to Doctor HH: ${doctorHHNumber}`, type: "success" });
+      setDoctorHHNumber("");
+      fetchDoctors(loggedInPatient); // Update list
     } catch (err) {
-      setMessage({ text: "❌ Error granting access.", type: "error" });
+      console.error(err);
+      setMessage({ text: "❌ Error granting access. It may have already been granted, or you rejected the transaction.", type: "error" });
     }
   };
 
-  const handleRevokeAccess = () => {
+  const handleRevokeAccess = async () => {
     if (!doctorHHNumber.trim() || doctorHHNumber.length !== 6) {
       setMessage({ text: "⚠️ Please enter a valid 6-digit Doctor HH Number.", type: "error" });
       return;
     }
 
-    let storedPatients = JSON.parse(localStorage.getItem("patients")) || [];
-    const index = storedPatients.findIndex((p) => p.id === loggedInPatient.id);
+    if (!loggedInPatient) {
+      setMessage({ text: "⚠️ No logged-in patient found. Please log in.", type: "error" });
+      return;
+    }
+    
+    try {
+      const accounts = await window.ethereum.request({ method: "eth_accounts" });
+      const patientWallet = accounts[0].toLowerCase();
 
-    if (index !== -1) {
-      const patient = storedPatients[index];
-      patient.authorizedDoctors = patient.authorizedDoctors.filter(
-        (entry) => entry.doctorHH !== doctorHHNumber
-      );
-      storedPatients[index] = patient;
-      localStorage.setItem("patients", JSON.stringify(storedPatients));
-      setLoggedInPatient(patient);
+      if (patientWallet !== loggedInPatient.walletAddress.toLowerCase()) {
+        setMessage({
+          text: "⚠️ MetaMask account mismatch! Switch to the correct patient wallet in MetaMask.",
+          type: "warning",
+        });
+        return;
+      }
+
+      const web3 = new Web3(window.ethereum);
+      const networkId = await web3.eth.net.getId();
+      const deployedNetwork = PatientRegistration.networks[networkId];
+      if (!deployedNetwork) {
+        setMessage({ text: "Contract not deployed on current network.", type: "error" });
+        return;
+      }
+
+      const contract = new web3.eth.Contract(PatientRegistration.abi, deployedNetwork.address);
+
+      setMessage({ text: "⏳ Revoking access on the blockchain... Please confirm the transaction.", type: "warning" });
+
+      await contract.methods.revokePermission(
+        loggedInPatient.id.toString(),
+        doctorHHNumber
+      ).send({ from: patientWallet, gas: 3000000 });
+
       setMessage({ text: `✅ Access revoked from Doctor HH: ${doctorHHNumber}`, type: "success" });
       setDoctorHHNumber("");
+      fetchDoctors(loggedInPatient); // Update list
+    } catch (err) {
+      console.error(err);
+      setMessage({ text: "❌ Error revoking access. Access may not exist, or you rejected the transaction.", type: "error" });
     }
   };
 
@@ -176,31 +213,26 @@ const GrantPermission = () => {
 
           {message && (
             <div className="mt-4 text-center">
-              <p className="text-red-500 font-semibold text-lg">
+              <p className={message.type === "success" ? "text-green-500 font-semibold text-lg" : "text-yellow-500 font-semibold text-lg"}>
                 {message.text}
               </p>
             </div>
           )}
 
-          {loggedInPatient?.authorizedDoctors?.filter(doc => doc.doctorHH).length > 0 && (
+          {authorizedDoctors.length > 0 && (
             <div className="mt-8 text-white">
               <h3 className="text-lg font-semibold mb-3">Doctors with Access:</h3>
               <div className="space-y-3">
-                {loggedInPatient.authorizedDoctors
-                  .filter((doc) => doc.doctorHH)
-                  .map((doc, idx) => (
-                    <div
-                      key={idx}
-                      className="bg-gray-700 rounded-xl p-4 text-sm text-white shadow-md"
-                    >
-                      <p className="font-semibold text-yellow-400">
-                        Doctor HH: <span className="text-white">{doc.doctorHH}</span>
-                      </p>
-                      <p className="text-gray-300">
-                        Granted At: {new Date(doc.grantedAt).toLocaleString()}
-                      </p>
-                    </div>
-                  ))}
+                {authorizedDoctors.map((docHH, idx) => (
+                  <div
+                    key={idx}
+                    className="bg-gray-700 rounded-xl p-4 text-sm text-white shadow-md flex justify-between items-center"
+                  >
+                    <p className="font-semibold text-yellow-400">
+                      Doctor HH: <span className="text-white">{docHH}</span>
+                    </p>
+                  </div>
+                ))}
               </div>
             </div>
           )}

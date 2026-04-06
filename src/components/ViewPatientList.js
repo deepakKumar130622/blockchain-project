@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import Web3 from "web3";
 import NavBar_Logout from "./NavBar_Logout";
+import PatientRegistration from "../build/contracts/PatientRegistration.json";
 
 const ViewPatientList = () => {
   const { hhNumber } = useParams();
@@ -10,18 +12,50 @@ const ViewPatientList = () => {
   const [expandedPatient, setExpandedPatient] = useState(null);
   const [recordVisibility, setRecordVisibility] = useState({});
 
-  const fetchPatientData = () => {
-    const storedPatients = JSON.parse(localStorage.getItem("patients")) || [];
+  const fetchPatientData = async () => {
     const storedRecords = JSON.parse(localStorage.getItem("records")) || {};
 
     if (hhNumber) {
       const doctorHH = hhNumber.toString();
-      const approvedPatients = storedPatients.filter(patient =>
-        patient?.authorizedDoctors?.includes(doctorHH)
-      );
-
-      setPatients(approvedPatients);
       setRecords(storedRecords);
+
+      try {
+        if (window.ethereum) {
+          const web3 = new Web3(window.ethereum);
+          const networkId = await web3.eth.net.getId();
+          const deployedNetwork = PatientRegistration.networks[networkId];
+          if (deployedNetwork) {
+            const contract = new web3.eth.Contract(PatientRegistration.abi, deployedNetwork.address);
+            const approvedPatientsRaw = await contract.methods.getPatientList(doctorHH).call();
+            
+            const approvedPatients = await Promise.all(
+              approvedPatientsRaw.map(async (p) => {
+                try {
+                  const details = await contract.methods.getPatientDetails(p.patient_number).call();
+                  return {
+                    id: p.patient_number,
+                    name: p.patient_name,
+                    dob: details.dateOfBirth,
+                    gender: details.gender,
+                    bloodGroup: details.bloodGroup,
+                    address: details.homeAddress,
+                    email: details.email
+                  };
+                } catch (e) {
+                  return {
+                    id: p.patient_number,
+                    name: p.patient_name
+                  };
+                }
+              })
+            );
+            
+            setPatients(approvedPatients);
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching patient list from blockchain:", err);
+      }
     }
   };
 

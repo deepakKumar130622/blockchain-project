@@ -52,11 +52,7 @@ const DoctorForm = () => {
         const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
         const sender = accounts[0];
 
-        await web3.eth.sendTransaction({
-          from: sender,
-          to: "0x0000000000000000000000000000000000000000",
-          value: web3.utils.toWei("0.001", "ether"),
-        });
+        // Creating record...
 
         const prescriptionData = {
           recordId,

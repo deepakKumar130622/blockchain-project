@@ -1,25 +1,31 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import NavBar_Logout from "./NavBar_Logout";
+import supabase from "../supabaseClient";
 
 const DoctorProfile = () => {
-  const { doctorId } = useParams(); // Get the doctor ID from URL params
+  const { doctorId } = useParams();
   const navigate = useNavigate();
   const [doctorDetails, setDoctorDetails] = useState(null);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    try {
-      const storedDetails = JSON.parse(localStorage.getItem("doctorDetails"));
-      if (storedDetails && storedDetails[doctorId]) {
-        setDoctorDetails(storedDetails[doctorId]);
+    const fetchDoctorFromSupabase = async () => {
+      const { data, error: sbError } = await supabase
+        .from("doctors")
+        .select("*")
+        .eq("hh_number", doctorId)
+        .single();
+
+      if (sbError || !data) {
+        console.error("❌ Failed to load doctor from Supabase:", sbError?.message);
+        setError("❌ Doctor details not found.");
       } else {
-        setError("❌ Doctor details not found in localStorage.");
+        setDoctorDetails(data);
       }
-    } catch (e) {
-      console.error("❌ Failed to load doctor details from localStorage:", e);
-      setError("Failed to load doctor details.");
-    }
+    };
+
+    fetchDoctorFromSupabase();
   }, [doctorId]);
 
   const cancelOperation = () => navigate(`/doctor/${doctorId}`);
@@ -37,11 +43,16 @@ const DoctorProfile = () => {
             <p className="text-red-500 text-center font-semibold">{error}</p>
           ) : doctorDetails ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-base sm:text-lg">
-              <ProfileLine label="Name" value={doctorDetails.name || "N/A"} />
-              <ProfileLine label="Specialization" value={doctorDetails.specialization || "N/A"} />
-              <ProfileLine label="Email-Id" value={doctorDetails.email || "N/A"} />
-              <ProfileLine label="Phone" value={doctorDetails.phone || "N/A"} />
-              <ProfileLine label="Hospital" value={doctorDetails.hospital || "N/A"} />
+              <ProfileLine label="Name" value={doctorDetails.name} />
+              <ProfileLine label="Hospital" value={doctorDetails.hospital_name} />
+              <ProfileLine label="Hospital Location" value={doctorDetails.hospital_location} />
+              <ProfileLine label="Date of Birth" value={doctorDetails.date_of_birth} />
+              <ProfileLine label="Gender" value={doctorDetails.gender} />
+              <ProfileLine label="Specialization" value={doctorDetails.specialization} />
+              <ProfileLine label="Department" value={doctorDetails.department} />
+              <ProfileLine label="Designation" value={doctorDetails.designation} />
+              <ProfileLine label="Work Experience" value={doctorDetails.work_experience ? `${doctorDetails.work_experience} years` : "N/A"} />
+              <ProfileLine label="Email-Id" value={doctorDetails.email} />
               <ProfileLine label="Doctor ID" value={doctorId} />
             </div>
           ) : (
@@ -65,7 +76,7 @@ const DoctorProfile = () => {
 const ProfileLine = ({ label, value }) => (
   <div className="bg-white/5 border border-white/10 rounded-xl px-5 py-4 flex flex-col sm:flex-row sm:justify-between sm:items-center text-left shadow-inner hover:bg-white/10 transition duration-300 ease-in-out">
     <span className="text-gray-300 font-medium">{label}:</span>
-    <span className="text-yellow-400 font-semibold mt-1 sm:mt-0">{value}</span>
+    <span className="text-yellow-400 font-semibold mt-1 sm:mt-0">{value || "N/A"}</span>
   </div>
 );
 

@@ -1,13 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Web3 from "web3";
 import DoctorRegistration from "../build/contracts/DoctorRegistration.json";
 import { useNavigate } from "react-router-dom";
 import "../CSS/DoctorRegistration.css";
 import NavBar from "./NavBar";
+import supabase from "../supabaseClient";
 
 const DoctorRegistry = () => {
-  const [web3, setWeb3] = useState(null);
-  const [contract, setContract] = useState(null);
   const [doctorAddress, setDoctorAddress] = useState("");
   const [doctorName, setDoctorName] = useState("");
   const [hospitalName, setHospitalName] = useState("");
@@ -32,32 +31,7 @@ const DoctorRegistry = () => {
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const init = async () => {
-      if (window.ethereum) {
-        const web3Instance = new Web3(window.ethereum);
-        try {
-          await window.ethereum.enable();
-          setWeb3(web3Instance);
 
-          const networkId = await web3Instance.eth.net.getId();
-          const deployedNetwork = DoctorRegistration.networks[networkId];
-          const contractInstance = new web3Instance.eth.Contract(
-            DoctorRegistration.abi,
-            deployedNetwork && deployedNetwork.address
-          );
-
-          setContract(contractInstance);
-        } catch (error) {
-          console.error("User denied access to accounts.");
-        }
-      } else {
-        console.log("Please install MetaMask extension");
-      }
-    };
-
-    init();
-  }, []);
 
   const handleRegister = async () => {
     if (
@@ -146,6 +120,30 @@ const DoctorRegistry = () => {
           password // Include password in the function call
         )
         .send({ from: doctorAddress });
+
+      // Save doctor profile to Supabase
+      const { error: supabaseError } = await supabase
+        .from("doctors")
+        .insert([{
+          hh_number: hhNumber,
+          wallet_address: doctorAddress,
+          name: doctorName,
+          hospital_name: hospitalName,
+          hospital_location: hospitalLocation,
+          date_of_birth: dateOfBirth,
+          gender: gender,
+          email: email,
+          specialization: specialization,
+          department: department,
+          designation: designation,
+          work_experience: workExperience,
+        }]);
+
+      if (supabaseError) {
+        console.warn("Supabase save warning:", supabaseError.message);
+      } else {
+        console.log("✅ Doctor data saved to Supabase");
+      }
 
       alert("Doctor registered successfully!");
       navigate("/");

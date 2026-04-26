@@ -58,6 +58,7 @@ const DoctorLogin = () => {
             .call();
 
           localStorage.setItem("role", "doctor");
+          localStorage.setItem("doctorHhNumber", hhNumber);
           navigate("/doctor/" + hhNumber);
         } else {
           alert("Incorrect password");

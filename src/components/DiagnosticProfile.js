@@ -1,25 +1,31 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import NavBar_Logout from "./NavBar_Logout";
+import supabase from "../supabaseClient";
 
 const DiagnosticProfile = () => {
-  const { diagnosticId } = useParams(); // Get the diagnostic center ID from URL params
+  const { diagnosticId } = useParams();
   const navigate = useNavigate();
   const [diagnosticDetails, setDiagnosticDetails] = useState(null);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    try {
-      const storedDetails = JSON.parse(localStorage.getItem("diagnosticDetails"));
-      if (storedDetails && storedDetails[diagnosticId]) {
-        setDiagnosticDetails(storedDetails[diagnosticId]);
+    const fetchDiagnosticFromSupabase = async () => {
+      const { data, error: sbError } = await supabase
+        .from("diagnostics")
+        .select("*")
+        .eq("hh_number", diagnosticId)
+        .single();
+
+      if (sbError || !data) {
+        console.error("❌ Failed to load diagnostic from Supabase:", sbError?.message);
+        setError("❌ Diagnostic center details not found.");
       } else {
-        setError("❌ Diagnostic center details not found in localStorage.");
+        setDiagnosticDetails(data);
       }
-    } catch (e) {
-      console.error("❌ Failed to load diagnostic details from localStorage:", e);
-      setError("Failed to load diagnostic details.");
-    }
+    };
+
+    fetchDiagnosticFromSupabase();
   }, [diagnosticId]);
 
   const cancelOperation = () => navigate(`/diagnostic/${diagnosticId}`);
@@ -37,11 +43,11 @@ const DiagnosticProfile = () => {
             <p className="text-red-500 text-center font-semibold">{error}</p>
           ) : diagnosticDetails ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-base sm:text-lg">
-              <ProfileLine label="Name" value={diagnosticDetails.name || "N/A"} />
-              <ProfileLine label="Location" value={diagnosticDetails.location || "N/A"} />
-              <ProfileLine label="Email-Id" value={diagnosticDetails.email || "N/A"} />
-              <ProfileLine label="Phone" value={diagnosticDetails.phone || "N/A"} />
-              <ProfileLine label="Authorized Doctors" value={diagnosticDetails.authorizedDoctors || "N/A"} />
+              <ProfileLine label="Diagnostic Center Name" value={diagnosticDetails.diagnostic_name} />
+              <ProfileLine label="Hospital Name" value={diagnosticDetails.hospital_name} />
+              <ProfileLine label="Location" value={diagnosticDetails.location} />
+              <ProfileLine label="Email-Id" value={diagnosticDetails.email} />
+              <ProfileLine label="Wallet Address" value={diagnosticDetails.wallet_address} />
               <ProfileLine label="Diagnostic ID" value={diagnosticId} />
             </div>
           ) : (
@@ -65,7 +71,7 @@ const DiagnosticProfile = () => {
 const ProfileLine = ({ label, value }) => (
   <div className="bg-white/5 border border-white/10 rounded-xl px-5 py-4 flex flex-col sm:flex-row sm:justify-between sm:items-center text-left shadow-inner hover:bg-white/10 transition duration-300 ease-in-out">
     <span className="text-gray-300 font-medium">{label}:</span>
-    <span className="text-yellow-400 font-semibold mt-1 sm:mt-0">{value}</span>
+    <span className="text-yellow-400 font-semibold mt-1 sm:mt-0">{value || "N/A"}</span>
   </div>
 );
 

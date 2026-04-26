@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import NavBar_Logout from "./NavBar_Logout";
+import supabase from "../supabaseClient";
 
 const ViewProfile = () => {
   const { hhNumber } = useParams();
@@ -9,18 +10,22 @@ const ViewProfile = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    try {
-      const patientProfile = localStorage.getItem(`patientProfile_${hhNumber}`);
-      const storedDetails = patientProfile ? JSON.parse(patientProfile) : null;
-      if (storedDetails) {
-        setPatientDetails(storedDetails);
+    const fetchPatientFromSupabase = async () => {
+      const { data, error: sbError } = await supabase
+        .from("patients")
+        .select("*")
+        .eq("hh_number", hhNumber)
+        .single();
+
+      if (sbError || !data) {
+        console.error("❌ Failed to load patient from Supabase:", sbError?.message);
+        setError("❌ Patient details not found.");
       } else {
-        setError("❌ Patient details not found in localStorage.");
+        setPatientDetails(data);
       }
-    } catch (e) {
-      console.error("❌ Failed to load patient details from localStorage:", e);
-      setError("Failed to load patient details.");
-    }
+    };
+
+    fetchPatientFromSupabase();
   }, [hhNumber]);
 
   const cancelOperation = () => navigate(`/patient/${hhNumber}`);
@@ -38,12 +43,12 @@ const ViewProfile = () => {
             <p className="text-red-500 text-center font-semibold">{error}</p>
           ) : patientDetails ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-base sm:text-lg">
-              <ProfileLine label="Name" value={patientDetails.name || "N/A"} />
-              <ProfileLine label="DOB" value={patientDetails.dob || "N/A"} />
-              <ProfileLine label="Gender" value={patientDetails.gender || "N/A"} />
-              <ProfileLine label="Blood Group" value={patientDetails.bloodGroup || "N/A"} />
-              <ProfileLine label="Email-Id" value={patientDetails.email || "N/A"} />
-              <ProfileLine label="Address" value={patientDetails.address || "N/A"} />
+              <ProfileLine label="Name" value={patientDetails.name} />
+              <ProfileLine label="DOB" value={patientDetails.date_of_birth} />
+              <ProfileLine label="Gender" value={patientDetails.gender} />
+              <ProfileLine label="Blood Group" value={patientDetails.blood_group} />
+              <ProfileLine label="Email-Id" value={patientDetails.email} />
+              <ProfileLine label="Address" value={patientDetails.home_address} />
               <ProfileLine label="HH Number" value={hhNumber} />
             </div>
           ) : (
@@ -67,7 +72,7 @@ const ViewProfile = () => {
 const ProfileLine = ({ label, value }) => (
   <div className="bg-white/5 border border-white/10 rounded-xl px-5 py-4 flex flex-col sm:flex-row sm:justify-between sm:items-center text-left shadow-inner hover:bg-white/10 transition duration-300 ease-in-out">
     <span className="text-gray-300 font-medium">{label}:</span>
-    <span className="text-yellow-400 font-semibold mt-1 sm:mt-0">{value}</span>
+    <span className="text-yellow-400 font-semibold mt-1 sm:mt-0">{value || "N/A"}</span>
   </div>
 );
 

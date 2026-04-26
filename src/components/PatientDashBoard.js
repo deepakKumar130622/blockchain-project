@@ -3,7 +3,6 @@ import Web3 from "web3";
 import { useParams, useNavigate } from "react-router-dom";
 import NavBar_Logout from "./NavBar_Logout";
 import PatientRegistration from "../build/contracts/PatientRegistration.json";
-import axios from "axios";
 
 const PatientDashBoard = () => {
   const { hhNumber } = useParams();
@@ -43,16 +42,6 @@ const PatientDashBoard = () => {
           const result = await contractInstance.methods.getPatientDetails(hhNumber).call();
           if (result) {
             setPatientDetails(result);
-            localStorage.setItem(`patientProfile_${hhNumber}`, JSON.stringify(result));
-            // Send patient profile to backend
-            try {
-              await axios.post("http://localhost:5000/api/patient-profile", {
-                hhNumber,
-                profile: result
-              });
-            } catch (backendError) {
-              console.error("Failed to store patient profile in backend:", backendError);
-            }
           }
         } catch (err) {
           console.error("Error retrieving patient details:", err);

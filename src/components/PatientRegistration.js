@@ -4,6 +4,7 @@ import PatientRegistration from "../build/contracts/PatientRegistration.json";
 import { useNavigate } from "react-router-dom";
 import "../CSS/PatientRegistration.css";
 import NavBar from "./NavBar";
+import supabase from "../supabaseClient";
 
 const PatientRegistry = () => {
   const [web3, setWeb3] = useState(null);
@@ -152,6 +153,26 @@ const PatientRegistry = () => {
       )
       .send({ from: walletAddress });
 
+      // Save patient profile to Supabase
+      const { error: supabaseError } = await supabase
+        .from("patients")
+        .insert([{
+          hh_number: hhNumber,
+          wallet_address: walletAddress,
+          name: name,
+          date_of_birth: dateOfBirth,
+          gender: gender,
+          blood_group: bg,
+          home_address: homeAddress,
+          email: email,
+        }]);
+
+      if (supabaseError) {
+        console.warn("Supabase save warning:", supabaseError.message);
+      } else {
+        console.log("✅ Patient data saved to Supabase");
+      }
+
       alert("Patient registered successfully!");
       navigate("/");
       } catch (error) {
@@ -284,10 +305,10 @@ const PatientRegistry = () => {
             <option value="A-">A-</option>
             <option value="B+">B+</option>
             <option value="B-">B-</option>
-            <option value="B+">O+</option>
-            <option value="B-">O-</option>
-            <option value="B+">AB+</option>
-            <option value="B-">AB-</option>
+            <option value="O+">O+</option>
+            <option value="O-">O-</option>
+            <option value="AB+">AB+</option>
+            <option value="AB-">AB-</option>
           </select>
         </div>
 
